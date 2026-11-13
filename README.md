@@ -1,6 +1,6 @@
 # MyArc
 
-A minimal Chromium browser for macOS, Windows and Linux, built with Electron after Arc's sidebar. It has a favorites grid, nested bookmark folders, and spaces that keep work and personal accounts apart.
+A minimal Chromium browser for macOS, built with Electron after Arc's sidebar. It has a favorites grid, nested bookmark folders, and spaces that keep work and personal accounts apart.
 
 ## Download
 
@@ -8,10 +8,8 @@ A minimal Chromium browser for macOS, Windows and Linux, built with Electron aft
 | --- | --- |
 | macOS (Apple Silicon) | [MyArc-mac-arm64.dmg](https://github.com/xohnny1337/myarc/releases/latest/download/MyArc-mac-arm64.dmg) |
 | macOS (Intel) | [MyArc-mac-x64.dmg](https://github.com/xohnny1337/myarc/releases/latest/download/MyArc-mac-x64.dmg) |
-| Windows | [MyArc-win.exe](https://github.com/xohnny1337/myarc/releases/latest/download/MyArc-win.exe) |
-| Linux | [MyArc-linux.AppImage](https://github.com/xohnny1337/myarc/releases/latest/download/MyArc-linux.AppImage) |
 
-These links always point to the newest build. Older versions are on the [Releases](https://github.com/xohnny1337/myarc/releases) page. The macOS app is signed and notarized by Apple.
+These links always point to the newest build. Older versions are on the [Releases](https://github.com/xohnny1337/myarc/releases) page. The app is signed and notarized by Apple.
 
 ## Features
 
@@ -65,7 +63,7 @@ Data lives in `~/Library/Application Support/MyArc` for the installed app, and i
 
 ## Releases
 
-Every push to `main` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). It builds macOS, Windows and Linux and publishes them as release `v1.0.<run number>`. To push without making a release, put `[skip ci]` in the commit message.
+Every push to `main` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). It builds the macOS app for Apple Silicon and Intel and publishes it as release `v1.0.<run number>`. To push without making a release, put `[skip ci]` in the commit message.
 
 The macOS build is signed and notarized using these repository secrets:
 
