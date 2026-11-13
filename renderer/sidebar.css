@@ -1,0 +1,965 @@
+:root {
+  --sidebar-w: 260px;
+  --gap: 8px;
+  --radius: 8px;
+
+  /* Blackout: true black, neutral greys, white as the only accent. */
+  --bg: #000000;
+  --bg-raised: #111111;
+  --accent: #f5f5f5;
+  --accent-soft: rgba(255, 255, 255, 0.1);
+  --accent-ring: rgba(255, 255, 255, 0.3);
+
+  --text: rgba(255, 255, 255, 0.92);
+  --text-dim: rgba(255, 255, 255, 0.46);
+  --text-mid: rgba(255, 255, 255, 0.7);
+  --hover: rgba(255, 255, 255, 0.05);
+  --active: rgba(255, 255, 255, 0.09);
+  --tile: rgba(255, 255, 255, 0.045);
+  --tile-hover: rgba(255, 255, 255, 0.08);
+  --hairline: rgba(255, 255, 255, 0.07);
+  --line: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.3 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: default;
+  -webkit-app-region: no-drag;
+}
+
+svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- sidebar shell ---------------------------------------------------- */
+
+#sidebar {
+  width: var(--sidebar-w);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0 var(--gap) var(--gap);
+}
+
+.toolbar {
+  height: 44px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  -webkit-app-region: drag;
+}
+
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  display: grid;
+  place-items: center;
+}
+
+.icon-btn {
+  color: var(--text-mid);
+  transition: background 0.12s, color 0.12s;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.icon-btn:disabled {
+  opacity: 0.3;
+}
+
+.text-btn {
+  border: 0;
+  background: none;
+  padding: 2px 6px;
+  border-radius: 5px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.text-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.urlbar {
+  width: 100%;
+  height: 34px;
+  flex: none;
+  padding: 0 10px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--tile);
+  color: var(--text-mid);
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.urlbar:hover {
+  background: var(--tile-hover);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.urlbar-wrap {
+  position: relative;
+  flex: none;
+}
+
+.urlbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 4px;
+}
+
+#url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.url-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.urlbar:hover .url-actions,
+.urlbar.menu-open .url-actions,
+.url-actions:has(.copied) {
+  opacity: 1;
+}
+
+.urlbar.placeholder .url-actions {
+  display: none;
+}
+
+.icon-btn.small {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+}
+
+.icon-btn.small svg {
+  width: 14px;
+  height: 14px;
+}
+
+.urlbar.menu-open #site-menu-btn {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Copied: the button pops and the checkmark draws itself in. */
+.icon-btn.copied {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.icon-btn.copied svg {
+  animation: copied-pop 0.32s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.icon-btn.copied svg path {
+  stroke-width: 2;
+  stroke-dasharray: 14;
+  stroke-dashoffset: 14;
+  animation: copied-draw 0.28s 0.06s ease-out forwards;
+}
+
+@keyframes copied-pop {
+  from {
+    transform: scale(0.4) rotate(-20deg);
+    opacity: 0;
+  }
+}
+
+@keyframes copied-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---- site menu popover -------------------------------------------------- */
+
+.site-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding: 6px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--bg-raised);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.5);
+  animation: pop 0.12s ease-out;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.site-menu-host {
+  padding: 6px 8px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.site-menu-section {
+  padding: 6px 8px 4px;
+  border-top: 1px solid var(--line);
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.site-menu-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+}
+
+.site-menu-row:hover {
+  background: var(--hover);
+}
+
+.site-menu-icon {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--tile-hover);
+  color: var(--text-mid);
+  transition: background 0.15s, color 0.15s;
+}
+
+.site-menu-row.on .site-menu-icon {
+  background: var(--accent);
+  color: #000;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.18);
+}
+
+.site-menu-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.site-menu-title {
+  font-weight: 600;
+}
+
+.site-menu-sub {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.site-menu-row.on .site-menu-sub {
+  color: var(--accent);
+}
+
+.site-permission-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px 4px;
+}
+
+.site-permission-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.site-permission-list .state {
+  color: var(--text-dim);
+}
+
+.site-permission-list .state.blocked {
+  color: #ff8a7a;
+}
+
+.site-menu-link {
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-mid);
+  font-size: 12px;
+  text-align: left;
+}
+
+.site-menu-link:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.urlbar.placeholder {
+  color: var(--text-dim);
+}
+
+/* ---- favorites grid --------------------------------------------------- */
+
+.favorites {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+  gap: var(--gap);
+  margin: 12px 0 10px;
+}
+
+.fav {
+  position: relative;
+  height: 44px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--tile);
+  display: grid;
+  place-items: center;
+  transition: background 0.12s, border-color 0.12s, box-shadow 0.2s;
+}
+
+.fav:hover {
+  background: var(--tile-hover);
+}
+
+/* A page is open behind this favorite: a small accent dot under the icon. */
+.fav.open::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.8;
+}
+
+.fav.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-ring);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 6px 18px rgba(0, 0, 0, 0.7);
+}
+
+.fav .favicon,
+.fav .favicon img,
+.fav .favicon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.favorites-hint {
+  grid-column: 1 / -1;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 8px 14px;
+  text-align: center;
+  line-height: 1.35;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+/* ---- tree rows -------------------------------------------------------- */
+
+/* The scroll box clips at its edges, so give row outlines and shadows a few
+   pixels of room on each side. */
+.scroll {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  margin: 0 -4px;
+  padding: 2px 4px;
+}
+
+.scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pinned-zone {
+  min-height: 12px;
+}
+
+.row {
+  position: relative;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 0 calc(10px + var(--depth, 0) * 16px);
+  border-radius: var(--radius);
+}
+
+.row {
+  color: var(--text-mid);
+  transition: background 0.12s, color 0.12s;
+}
+
+.row:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.row.active {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.07));
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--hairline), 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* A little air between rows so hover and active highlights don't touch. */
+.tree > li + li,
+.new-tab {
+  margin-top: 2px;
+}
+
+.new-tab {
+  margin-bottom: 2px;
+}
+
+.row .label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row.bookmark:not(.open):not(:hover) .label {
+  color: var(--text-dim);
+}
+
+.row.folder .favicon {
+  color: var(--text-dim);
+}
+
+.favicon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+
+.favicon img {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+.row.loading .favicon,
+.fav.loading .favicon {
+  animation: pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  to {
+    opacity: 0.35;
+  }
+}
+
+.row .close {
+  width: 24px;
+  height: 24px;
+  opacity: 0;
+}
+
+.row:hover .close {
+  opacity: 1;
+}
+
+.row .close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.rename {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 5px;
+  outline: none;
+  background: var(--bg-raised);
+  box-shadow: inset 0 0 0 1px var(--accent-ring);
+  color: var(--text);
+  font: inherit;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  margin: 6px 4px;
+}
+
+.divider hr {
+  flex: 1;
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--line);
+}
+
+.new-tab,
+.new-folder-cta {
+  color: var(--text-dim);
+}
+
+.new-folder-cta:hover {
+  color: var(--text);
+}
+
+.new-tab:hover {
+  color: var(--text);
+}
+
+.tabs-zone {
+  flex: 1;
+  min-height: 80px;
+}
+
+.footer {
+  height: 36px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ---- spaces ------------------------------------------------------------ */
+
+.spaces {
+  min-width: 0;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.spaces::-webkit-scrollbar {
+  display: none;
+}
+
+.spaces {
+  align-items: center;
+}
+
+/* Fixed size, so switching spaces never shifts the row. */
+.space-current {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 7px;
+  background: var(--tile-hover);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.space-current.incognito svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Incognito, when not current: a hollow ring instead of a dot. */
+.space-dot.incognito::before {
+  background: none;
+  box-shadow: inset 0 0 0 1.2px rgba(255, 255, 255, 0.4);
+}
+
+.space-title .favicon {
+  margin-right: 6px;
+}
+
+.space-title svg {
+  width: 14px;
+  height: 14px;
+}
+
+body.incognito #favorites,
+body.incognito #pinned,
+body.incognito .divider hr {
+  display: none;
+}
+
+body.incognito .divider {
+  justify-content: flex-end;
+}
+
+/* Favorites are hidden, so give the title the room they'd have taken. */
+body.incognito .scroll {
+  margin-top: 10px;
+}
+
+.incognito-hint {
+  margin: 10px 10px 0;
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* Other spaces: small, quiet dots that wake up on hover. */
+.space-dot {
+  width: 18px;
+  height: 24px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.space-dot::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  transition: background 0.15s, transform 0.15s;
+}
+
+.space-dot:hover::before {
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(1.4);
+}
+
+.space-title {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.space-title .rename {
+  flex: 1;
+  height: 22px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+}
+
+/* ---- toast ------------------------------------------------------------- */
+
+.toast {
+  position: fixed;
+  left: var(--gap);
+  bottom: 52px;
+  width: calc(var(--sidebar-w) - var(--gap) * 2);
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--accent-ring);
+  border-radius: var(--radius);
+  background: rgba(17, 17, 17, 0.97);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  color: var(--text);
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.18s, transform 0.18s;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: none;
+}
+
+.toast svg {
+  color: var(--accent);
+}
+
+/* ---- drag and drop ---------------------------------------------------- */
+
+.dragging {
+  opacity: 0.4;
+}
+
+.drop-before::before,
+.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.drop-before::before {
+  top: -1px;
+}
+
+.drop-after::after {
+  bottom: -1px;
+}
+
+.fav.drop-before::before,
+.fav.drop-after::after {
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  height: auto;
+}
+
+.fav.drop-before::before {
+  left: -5px;
+  right: auto;
+}
+
+.fav.drop-after::after {
+  left: auto;
+  right: -5px;
+}
+
+.drop-into {
+  background: var(--accent-soft) !important;
+  box-shadow: inset 0 0 0 1px var(--accent-ring);
+}
+
+/* ---- empty content area ----------------------------------------------- */
+
+/* The gap above the web page is the only part of the content side not
+   covered by the page itself, so it doubles as the window's title bar. */
+.drag-strip {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-w);
+  right: 0;
+  height: var(--gap);
+  -webkit-app-region: drag;
+}
+
+/* macOS drag regions are window-wide: one under another view (a web page,
+   the command bar) swallows that view's clicks. So none while the command
+   bar is open. */
+/* ---- developer mode bar -------------------------------------------------- */
+
+/* Full address above the page, Chrome-style. Doubles as the title bar. */
+.devbar {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-w);
+  right: var(--gap);
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 0 6px;
+  -webkit-app-region: drag;
+}
+
+.devbar[hidden] {
+  display: none;
+}
+
+.devbar-lock {
+  display: grid;
+  color: var(--text-dim);
+}
+
+.devbar-lock.insecure {
+  color: #ff8a7a;
+}
+
+.devbar-lock svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Editable like a regular browser's address bar. */
+.devbar-url {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  outline: none;
+  background: transparent;
+  color: var(--text-mid);
+  font: 11.5px/1 ui-monospace, 'SF Mono', Menlo, monospace;
+  text-overflow: ellipsis;
+  -webkit-app-region: no-drag;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.devbar-url:hover {
+  background: var(--hover);
+}
+
+.devbar-url:focus {
+  background: var(--bg-raised);
+  border-color: var(--accent-ring);
+  color: var(--text);
+}
+
+.devbar-url::selection {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.devbar-sep {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: var(--line);
+}
+
+#devbar-inspect.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* The page (and the panel behind it) starts below the bar. */
+body.dev-mode #empty {
+  margin-top: 40px;
+}
+
+body.palette-open .devbar,
+body.palette-open .toolbar,
+body.palette-open .drag-strip {
+  -webkit-app-region: no-drag;
+}
+
+/* Sits in the gap between the sidebar and the page; the page itself starts
+   at --sidebar-w, so this is the last strip of the sidebar we still own. */
+.resizer {
+  position: fixed;
+  top: var(--gap);
+  bottom: var(--gap);
+  left: calc(var(--sidebar-w) - var(--gap));
+  width: var(--gap);
+  cursor: col-resize;
+  -webkit-app-region: no-drag;
+}
+
+.resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  border-radius: 1px;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.resizer:hover::after,
+body.resizing .resizer::after {
+  background: var(--accent-ring);
+}
+
+body.resizing,
+body.resizing * {
+  cursor: col-resize !important;
+}
+
+#empty {
+  flex: 1;
+  margin: var(--gap) var(--gap) var(--gap) 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--hairline);
+  background: var(--bg-raised);
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+}
+
+kbd {
+  display: inline-block;
+  min-width: 20px;
+  margin: 0 1px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--hairline);
+  background: var(--tile-hover);
+  color: var(--text-mid);
+  font: inherit;
+  text-align: center;
+}

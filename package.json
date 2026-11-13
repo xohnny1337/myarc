@@ -2,10 +2,63 @@
   "name": "myarc",
   "version": "1.0.0",
   "description": "A minimal Chromium browser with nested bookmark folders and isolated spaces for work and personal profiles.",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron .",
+    "pack": "electron-builder --dir --publish never -c.mac.identity=- -c.mac.hardenedRuntime=false -c.mac.notarize=false",
+    "dist": "electron-builder --publish always"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^45.3.2",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.xohnny.myarc",
+    "productName": "MyArc",
+    "files": [
+      "main.js",
+      "preload.js",
+      "tab-preload.js",
+      "lib/**/*",
+      "renderer/**/*"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "releaseType": "release"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "MyArc-mac-${arch}.${ext}",
+      "hardenedRuntime": true,
+      "notarize": true
+    },
+    "win": {
+      "target": "nsis",
+      "artifactName": "MyArc-win.${ext}"
+    },
+    "linux": {
+      "target": "AppImage",
+      "artifactName": "MyArc-linux.${ext}"
+    }
+  }
 }

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: http: data:"
+    />
+    <title>Command Bar</title>
+    <link rel="stylesheet" href="palette.css" />
+  </head>
+  <body>
+    <div class="panel" role="dialog" aria-label="Search or Enter URL">
+      <form id="form" class="search" autocomplete="off">
+        <span class="search-icon" id="search-icon"></span>
+        <input id="q" spellcheck="false" placeholder="Search or Enter URL..." />
+      </form>
+      <ul id="results" class="results" role="listbox"></ul>
+    </div>
+    <script src="palette.js"></script>
+  </body>
+</html>

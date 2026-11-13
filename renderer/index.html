@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: http: data:"
+    />
+    <title>myarc</title>
+    <link rel="stylesheet" href="sidebar.css" />
+  </head>
+  <body>
+    <aside id="sidebar">
+      <header class="toolbar">
+        <button id="back" class="icon-btn" title="Back (⌘[)" disabled></button>
+        <button id="forward" class="icon-btn" title="Forward (⌘])" disabled></button>
+        <button id="reload" class="icon-btn" title="Reload (⌘R)" disabled></button>
+      </header>
+
+      <div class="urlbar-wrap">
+        <div id="urlbar" class="urlbar" role="button" tabindex="0">
+          <span id="url">Search or Enter URL</span>
+          <span class="url-actions">
+            <button id="copy-url" class="icon-btn small" title="Copy URL (⇧⌘C)"></button>
+            <button id="site-menu-btn" class="icon-btn small" title="Site Settings"></button>
+          </span>
+        </div>
+
+        <div id="site-menu" class="site-menu" hidden>
+          <div class="site-menu-host" id="site-menu-host"></div>
+          <div class="site-menu-section">Settings</div>
+          <button id="dev-mode" class="site-menu-row">
+            <span class="site-menu-icon" id="dev-mode-icon"></span>
+            <span class="site-menu-text">
+              <span class="site-menu-title">Developer Mode</span>
+              <span class="site-menu-sub" id="dev-mode-state">Off</span>
+            </span>
+          </button>
+          <div id="site-permissions" hidden>
+            <div class="site-menu-section">Permissions</div>
+            <ul id="site-permission-list" class="site-permission-list"></ul>
+            <button id="reset-permissions" class="site-menu-link">Reset Permissions</button>
+          </div>
+        </div>
+      </div>
+
+      <section id="favorites" class="favorites" data-drop="favorites"></section>
+
+      <div class="scroll">
+        <div id="space-title" class="space-title"></div>
+        <section id="pinned" class="pinned-zone" data-drop="pinned"></section>
+
+        <div class="divider">
+          <hr />
+          <button id="clear" class="text-btn" hidden>Clear</button>
+        </div>
+
+        <div class="tabs-zone" data-drop="tabs">
+          <div id="new-tab" class="row new-tab"><span class="favicon" data-icon="plus"></span><span class="label">New Tab</span></div>
+          <ul id="tabs" class="tree"></ul>
+          <p id="incognito-hint" class="incognito-hint" hidden>
+            Pages you open here aren’t saved to history. Leave this space and its tabs, cookies and site data are gone.
+          </p>
+        </div>
+      </div>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      <footer class="footer">
+        <div id="spaces" class="spaces" role="tablist" aria-label="Spaces"></div>
+        <button id="add" class="icon-btn" title="New…"></button>
+      </footer>
+    </aside>
+
+    <div class="drag-strip"></div>
+    <div id="devbar" class="devbar" hidden>
+      <span id="devbar-lock" class="devbar-lock"></span>
+      <input id="devbar-url" class="devbar-url" spellcheck="false" autocomplete="off" aria-label="Address" />
+      <button id="devbar-copy" class="icon-btn small" title="Copy URL (⇧⌘C)"></button>
+      <span class="devbar-sep"></span>
+      <button id="devbar-inspect" class="icon-btn small" title="Inspect Element (⌥⌘I)"></button>
+    </div>
+    <div class="resizer" title="Drag to resize the sidebar"></div>
+
+    <main id="empty">
+      <p>Press <kbd>⌘</kbd><kbd>T</kbd> to open a tab</p>
+    </main>
+
+    <script src="sidebar.js"></script>
+  </body>
+</html>
