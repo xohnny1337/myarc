@@ -18,6 +18,13 @@ These links always point to the newest build. Older versions are on the [Release
 - **Incognito**: <kbd>⇧⌘N</kbd> opens a temporary space with only tabs. It keeps no history and stores nothing on disk, and everything in it is gone once you leave it.
 - **Command bar**: <kbd>⌘T</kbd> and <kbd>⌘L</kbd> open it. Type to search your open tabs, bookmarks and history, or enter an address or a search.
 - **Developer Mode**: turned on per site from the site menu. It shows an address bar above the page that you can edit, and a button that opens Chrome's inspector docked next to the page.
+- **Tab restore**: each space reopens the tabs you had open when you quit. Restored tabs load when you open them.
+- **Ad and tracker blocking**: built in, using the same filter lists as uBlock Origin. Turn it off for a site from the site menu.
+- **Find in page**: <kbd>⌘F</kbd>, then <kbd>⌘G</kbd> / <kbd>⇧⌘G</kbd> for the next or previous match.
+- **Import from Arc**: File > Import from Arc… lets you pick which spaces, folders and tabs to bring over.
+- **Clear browsing data**: per space or per site, and clear history from the last 24 hours, 7 days, or all time.
+- **Default browser**: MyArc > Set as Default Browser… makes links from other apps open in MyArc.
+- **Auto-update**: new versions download in the background, and the sidebar offers to restart into them.
 - **Permissions**: sites have to ask before using your camera, microphone, location, notifications or clipboard. You can have your answer remembered per site, separately in each space.
 - **Dark theme** throughout.
 
@@ -28,6 +35,8 @@ These links always point to the newest build. Older versions are on the [Release
 | <kbd>⌘T</kbd> | New tab (command bar) |
 | <kbd>⌘L</kbd> | Edit the current address |
 | <kbd>⌘W</kbd> | Close tab |
+| <kbd>⌘F</kbd> | Find in page |
+| <kbd>⌘G</kbd> / <kbd>⇧⌘G</kbd> | Next / previous match |
 | <kbd>⌘S</kbd> | Show or hide the sidebar |
 | <kbd>⇧⌘C</kbd> | Copy the current URL |
 | <kbd>⇧⌘N</kbd> | New incognito space |
@@ -38,6 +47,7 @@ These links always point to the newest build. Older versions are on the [Release
 | <kbd>⌘R</kbd> / <kbd>⇧⌘R</kbd> | Reload / hard reload (skips the cache) |
 | <kbd>⌥⌘I</kbd> | Inspector |
 | <kbd>⌘P</kbd> | Save the page as a PDF |
+| <kbd>⇧⌘⌫</kbd> | Clear browsing data |
 
 ## Development
 
@@ -53,12 +63,16 @@ npm start
 | Path | Contents |
 | --- | --- |
 | `main.js` | Starts the app |
-| `lib/browser.js` | Window, tabs, spaces, incognito, menus |
+| `lib/browser.js` | Window, tabs, spaces, incognito |
+| `lib/menu.js` | App menu |
 | `lib/store.js` | Bookmarks and spaces (`bookmarks.json`) |
 | `lib/history.js` | Browsing history, one file per space |
 | `lib/permissions.js` | Permission prompts |
 | `lib/google-signin.js` | Workarounds that let Google sign-in work |
-| `renderer/` | Sidebar and command bar UI |
+| `lib/adblock.js` | Ad and tracker blocking |
+| `lib/arc-import.js` | Import from Arc |
+| `lib/updater.js` | Auto-update from GitHub Releases |
+| `renderer/` | Sidebar, command bar, find bar and import UI |
 
 Data lives in `~/Library/Application Support/MyArc` for the installed app, and in `myarc` when you run it with `npm start`.
 
@@ -82,4 +96,4 @@ Without these secrets, the macOS build still works. It's ad-hoc signed and not n
 
 - **Passkeys don't work.** Electron has no passkey support, so on Google sign-in use your password and 2-step verification instead.
 - **No Safe Browsing.** There are no warnings for phishing or malware sites.
-- **Open tabs aren't restored** after quitting.
+- **Only the installed app auto-updates** and can be set as the default browser. Running with `npm start` does neither.
