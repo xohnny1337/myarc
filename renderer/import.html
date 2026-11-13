@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: http: data:"
+    />
+    <title>Import from Arc</title>
+    <link rel="stylesheet" href="import.css" />
+  </head>
+  <body>
+    <div class="dialog" role="dialog" aria-labelledby="title">
+      <header class="head">
+        <h1 id="title">Import from Arc</h1>
+        <p>
+          Choose what to bring over. Each Arc space becomes a new space here. Sign-ins don’t carry over, so you’ll
+          sign in to sites again.
+        </p>
+        <div class="bulk">
+          <button id="select-all" class="link">Select all</button>
+          <button id="select-none" class="link">Select none</button>
+        </div>
+      </header>
+
+      <div id="spaces" class="spaces"></div>
+
+      <footer class="foot">
+        <span id="summary" class="summary"></span>
+        <button id="cancel" class="btn">Cancel</button>
+        <button id="import" class="btn primary">Import</button>
+      </footer>
+    </div>
+    <script src="import.js"></script>
+  </body>
+</html>

@@ -29,6 +29,13 @@
         <div id="site-menu" class="site-menu" hidden>
           <div class="site-menu-host" id="site-menu-host"></div>
           <div class="site-menu-section">Settings</div>
+          <button id="adblock" class="site-menu-row">
+            <span class="site-menu-icon" id="adblock-icon"></span>
+            <span class="site-menu-text">
+              <span class="site-menu-title">Ad Blocking</span>
+              <span class="site-menu-sub" id="adblock-state">On</span>
+            </span>
+          </button>
           <button id="dev-mode" class="site-menu-row">
             <span class="site-menu-icon" id="dev-mode-icon"></span>
             <span class="site-menu-text">
@@ -36,6 +43,8 @@
               <span class="site-menu-sub" id="dev-mode-state">Off</span>
             </span>
           </button>
+          <div class="site-menu-section">Data</div>
+          <button id="clear-site-data" class="site-menu-link">Clear cookies and site data</button>
           <div id="site-permissions" hidden>
             <div class="site-menu-section">Permissions</div>
             <ul id="site-permission-list" class="site-permission-list"></ul>
@@ -65,6 +74,12 @@
       </div>
 
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      <button id="update-banner" class="update-banner" hidden>
+        <span class="update-dot"></span>
+        <span id="update-text">Update ready</span>
+        <span class="update-action">Restart</span>
+      </button>
 
       <footer class="footer">
         <div id="spaces" class="spaces" role="tablist" aria-label="Spaces"></div>

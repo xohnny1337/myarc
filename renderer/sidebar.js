@@ -16,6 +16,7 @@ const ICONS = {
   lock: '<svg viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>',
   unlock: '<svg viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 4.9-.7"/></svg>',
   inspect: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="4.5"/><circle cx="8" cy="8" r="1"/><path d="M8 1.5v2.2M8 12.3v2.2M1.5 8h2.2M12.3 8h2.2"/></svg>',
+  shield: '<svg viewBox="0 0 16 16"><path d="M8 1.8 3 3.6v4c0 3.1 2.1 5.4 5 6.6 2.9-1.2 5-3.5 5-6.6v-4z"/><path d="m5.8 8.2 1.6 1.6 2.9-3.2"/></svg>',
   wrench: '<svg viewBox="0 0 16 16"><path d="M10.3 2.6a3.3 3.3 0 0 0-3.9 4.3L2.7 10.6a1.4 1.4 0 0 0 2 2l3.7-3.7a3.3 3.3 0 0 0 4.3-3.9l-2 2-1.8-.5-.5-1.8z"/></svg>',
   globe: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M2.5 8h11M8 2.5c-2.2 2.2-2.2 8.8 0 11M8 2.5c2.2 2.2 2.2 8.8 0 11"/></svg>',
   folder:
@@ -143,7 +144,10 @@ function render() {
   // Incognito is just tabs: no favorites, folders or pinning.
   document.body.classList.toggle('incognito', !!state.incognito)
   $('#incognito-hint').hidden = !state.incognito || state.tabs.length > 0
-  if (!resizing) setSidebarWidth(state.sidebarWidth)
+  // Hidden sidebar: width 0, so everything positioned from it (the
+  // Developer Mode bar, the drag strip) moves to the window's edge.
+  document.body.classList.toggle('sidebar-hidden', !!state.sidebarHidden)
+  if (!resizing) setSidebarWidth(state.sidebarHidden ? 0 : state.sidebarWidth)
   renderSpaces()
   renderFavorites()
   $('#pinned').replaceChildren(renderTree(state.pinned, null, 0))
@@ -155,8 +159,10 @@ function render() {
   $('#forward').disabled = !nav?.canGoForward
   $('#reload').disabled = !nav
   $('#clear').hidden = state.tabs.length === 0
+  $('#update-banner').hidden = !state.updateReady
+  if (state.updateReady) $('#update-text').textContent = `MyArc ${state.updateReady} is ready`
   showUrl()
-  slideInSpace()
+  syncSwipe()
 }
 
 function renderSpaces() {
@@ -229,7 +235,8 @@ function renderFavorites() {
     const link = state.linked[node.id]
     const tile = el('button', 'fav', { title: node.title, draggable: true })
     Object.assign(tile.dataset, { drop: 'fav', id: node.id, next: state.favorites[i + 1]?.id ?? '' })
-    tile.classList.toggle('open', !!link)
+    // The dot means a loaded page; restored tabs that haven't been opened yet don't count.
+    tile.classList.toggle('open', !!link && !link.asleep)
     tile.classList.toggle('loading', !!link?.loading)
     tile.classList.toggle('active', state.activeBookmarkId === node.id)
     tile.append(favicon(node))
@@ -265,7 +272,7 @@ function renderTree(list, parentId, depth) {
       if (node.open) li.append(renderTree(node.children, node.id, depth + 1))
     } else {
       const link = state.linked[node.id]
-      row.classList.toggle('open', !!link)
+      row.classList.toggle('open', !!link && !link.asleep)
       row.classList.toggle('loading', !!link?.loading)
       row.classList.toggle('active', state.activeBookmarkId === node.id)
       row.append(favicon(node), label(node.title))
@@ -344,6 +351,8 @@ function renderSiteMenu() {
   $('#site-menu-host').textContent = nav.host
   $('#dev-mode').classList.toggle('on', nav.devMode)
   $('#dev-mode-state').textContent = nav.devMode ? 'On' : 'Off'
+  $('#adblock').classList.toggle('on', nav.adblock === 'on')
+  $('#adblock-state').textContent = { on: 'On', off: 'Off for this site', loading: 'Starting…' }[nav.adblock] ?? 'On'
   const permissions = nav.permissions ?? []
   $('#site-permissions').hidden = permissions.length === 0
   $('#site-permission-list').replaceChildren(
@@ -525,11 +534,9 @@ document.addEventListener('drop', (e) => {
 
 // ---- swipe between spaces -------------------------------------------------
 
-// Two-finger horizontal swipe over the sidebar moves to the next or previous
-// space, like Arc. The space's content follows your fingers, slides out once
-// you pass the threshold, and the next space slides in from the other side.
-// Swiping toward a space that doesn't exist (past the first or last) does
-// nothing.
+// Two-finger horizontal swipe over the sidebar switches to the next or
+// previous space, instantly, the same as clicking its dot. Swiping toward a
+// space that doesn't exist (past the first or last) does nothing.
 //
 // Trackpads keep sending decaying "momentum" wheel events after the fingers
 // lift. Those must not trigger a second switch, but a new swipe started while
@@ -539,22 +546,8 @@ const SWIPE = {
   threshold: 80, // px of finger travel to switch
   quiet: 120, // ms without events = gesture over
   cooldown: 220, // ms after a switch before a new swipe can start
-  ease: 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.22s',
 }
-const swipe = { dx: 0, locked: false, lockedAt: 0, lastAbs: 0, lastSign: 0, timer: 0, incoming: 0, safety: 0, expectedId: null }
-
-function swipeTargets() {
-  return [$('#space-title'), $('#favorites'), $('.scroll')]
-}
-
-function setSwipeOffset(x, animate, fade = true) {
-  const width = $('#sidebar').offsetWidth || 1
-  for (const node of swipeTargets()) {
-    node.style.transition = animate ? SWIPE.ease : 'none'
-    node.style.transform = x ? `translateX(${x}px)` : ''
-    node.style.opacity = x && fade ? String(1 - Math.min(Math.abs(x) / width, 1) * 0.7) : ''
-  }
-}
+const swipe = { dx: 0, locked: false, lockedAt: 0, lastAt: 0, lastAbs: 0, lastSign: 0, timer: 0, expectedId: null, fromId: null }
 
 // The space we're on. Right after a swipe switches, the sidebar hasn't heard
 // back yet, so trust the space it switched to until the update arrives;
@@ -569,48 +562,21 @@ function spaceIndex() {
   return state.spaces.findIndex((s) => s.id === state.activeSpaceId)
 }
 
-function resetSwipe(animate = true) {
-  swipe.dx = 0
-  swipe.locked = false
-  setSwipeOffset(0, animate)
+// Called after each render: once an update shows we've left the space the
+// swipe started from, the real active space is known again.
+function syncSwipe() {
+  if (swipe.expectedId && state.activeSpaceId !== swipe.fromId) swipe.expectedId = null
 }
 
 function commitSwipe(direction) {
-  // direction: +1 = next space (content leaves to the left), -1 = previous.
+  // direction: +1 = next space, -1 = previous.
   const target = state.spaces[spaceIndex() + direction]
   swipe.locked = true
   swipe.lockedAt = performance.now()
   swipe.dx = 0
-  setSwipeOffset(-direction * $('#sidebar').offsetWidth * 0.6, true)
-  swipe.incoming = direction
   swipe.expectedId = target.id
   swipe.fromId = state.activeSpaceId
   api.dispatch({ type: 'switch-space', id: target.id })
-  // Safety net: if no update arrives, don't leave the content off-screen.
-  clearTimeout(swipe.safety)
-  swipe.safety = setTimeout(() => {
-    swipe.expectedId = null
-    if (!swipe.incoming) return
-    swipe.incoming = 0
-    setSwipeOffset(0, true)
-  }, 600)
-}
-
-// Called after each render: brings the new space in from the opposite side,
-// or makes sure nothing is left offset when no swipe is in progress.
-function slideInSpace() {
-  // Once an update shows we've left the space the swipe started from, the
-  // real active space is known again.
-  if (swipe.expectedId && state.activeSpaceId !== swipe.fromId) swipe.expectedId = null
-  if (swipe.incoming) {
-    const direction = swipe.incoming
-    swipe.incoming = 0
-    clearTimeout(swipe.safety)
-    setSwipeOffset(direction * $('#sidebar').offsetWidth * 0.4, false)
-    requestAnimationFrame(() => requestAnimationFrame(() => setSwipeOffset(0, true)))
-  } else if (!swipe.dx) {
-    setSwipeOffset(0, false)
-  }
 }
 
 function onSwipeWheel(e) {
@@ -621,7 +587,7 @@ function onSwipeWheel(e) {
   const now = performance.now()
   const abs = Math.abs(e.deltaX)
   const sign = Math.sign(e.deltaX)
-  const quietGap = now - (swipe.lastAt ?? 0) > SWIPE.quiet
+  const quietGap = now - swipe.lastAt > SWIPE.quiet
   const newFingers =
     swipe.locked &&
     now - swipe.lockedAt > SWIPE.cooldown &&
@@ -636,7 +602,6 @@ function onSwipeWheel(e) {
   }
   clearTimeout(swipe.timer)
   swipe.timer = setTimeout(() => {
-    if (!swipe.locked) resetSwipe(true)
     swipe.locked = false
     swipe.dx = 0
   }, SWIPE.quiet)
@@ -644,15 +609,10 @@ function onSwipeWheel(e) {
 
   swipe.dx -= e.deltaX
   const direction = swipe.dx < 0 ? 1 : -1
-  const hasTarget = !!state.spaces[spaceIndex() + direction]
-  if (!hasTarget) {
-    // Dead end (first or last space): stay perfectly still.
-    swipe.dx = 0
-    setSwipeOffset(0, false)
+  if (!state.spaces[spaceIndex() + direction]) {
+    swipe.dx = 0 // dead end
     return
   }
-  const width = $('#sidebar').offsetWidth
-  setSwipeOffset(Math.max(-width, Math.min(width, swipe.dx)), false)
   if (Math.abs(swipe.dx) > SWIPE.threshold) commitSwipe(direction)
 }
 
@@ -729,12 +689,14 @@ $('#new-tab .favicon').innerHTML = ICONS.plus
 
 $('#back').addEventListener('click', () => api.dispatch({ type: 'back' }))
 $('#forward').addEventListener('click', () => api.dispatch({ type: 'forward' }))
-$('#reload').addEventListener('click', () => api.dispatch({ type: 'reload' }))
+// Shift-click the reload button for a hard reload (⇧⌘R).
+$('#reload').addEventListener('click', (e) => api.dispatch({ type: e.shiftKey ? 'hard-reload' : 'reload' }))
 $('#add').addEventListener('click', () => {
   // Open the menu upward from the button, like Arc.
   const rect = $('#add').getBoundingClientRect()
   api.dispatch({ type: 'context-menu', kind: 'add', x: rect.left, y: rect.top - 4 })
 })
+$('#update-banner').addEventListener('click', () => api.dispatch({ type: 'install-update' }))
 $('#clear').addEventListener('click', () => api.dispatch({ type: 'clear-tabs' }))
 $('#new-tab').addEventListener('click', () => api.dispatch({ type: 'show-palette', newTab: true }))
 $('#urlbar').addEventListener('click', () => {
@@ -744,6 +706,8 @@ $('#urlbar').addEventListener('click', () => {
 $('#copy-url').innerHTML = ICONS.link
 $('#site-menu-btn').innerHTML = ICONS.sliders
 $('#dev-mode-icon').innerHTML = ICONS.wrench
+$('#adblock-icon').innerHTML = ICONS.shield
+$('#adblock').addEventListener('click', () => api.dispatch({ type: 'toggle-adblock' }))
 // The link icon morphs into a checkmark for a moment after copying.
 function copyWithCheck(button) {
   api.dispatch({ type: 'copy-url', quiet: true })
@@ -769,6 +733,10 @@ $('#site-menu-btn').addEventListener('click', (e) => {
 })
 $('#dev-mode').addEventListener('click', () => api.dispatch({ type: 'toggle-dev-mode' }))
 $('#reset-permissions').addEventListener('click', () => api.dispatch({ type: 'reset-permissions' }))
+$('#clear-site-data').addEventListener('click', () => {
+  closeSiteMenu()
+  api.dispatch({ type: 'clear-site-data' })
+})
 $('#devbar-copy').innerHTML = ICONS.link
 $('#devbar-copy').addEventListener('click', (e) => copyWithCheck(e.currentTarget))
 $('#devbar-inspect').innerHTML = ICONS.inspect

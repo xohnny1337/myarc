@@ -60,5 +60,9 @@
       "target": "AppImage",
       "artifactName": "MyArc-linux.${ext}"
     }
+  },
+  "dependencies": {
+    "@ghostery/adblocker-electron": "^2.20.3",
+    "electron-updater": "^6.8.11"
   }
 }

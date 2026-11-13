@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'" />
+    <title>Find</title>
+    <link rel="stylesheet" href="find.css" />
+  </head>
+  <body>
+    <form id="bar" class="bar" autocomplete="off">
+      <input id="q" spellcheck="false" placeholder="Find in page" aria-label="Find in page" />
+      <span id="count" class="count"></span>
+      <span class="sep"></span>
+      <button type="button" id="prev" class="btn" title="Previous (⇧⌘G)" aria-label="Previous match"></button>
+      <button type="button" id="next" class="btn" title="Next (⌘G)" aria-label="Next match"></button>
+      <button type="button" id="close" class="btn" title="Close (Esc)" aria-label="Close"></button>
+    </form>
+    <script src="find.js"></script>
+  </body>
+</html>

@@ -28,15 +28,16 @@ These links always point to the newest build. Older versions are on the [Release
 | <kbd>⌘T</kbd> | New tab (command bar) |
 | <kbd>⌘L</kbd> | Edit the current address |
 | <kbd>⌘W</kbd> | Close tab |
+| <kbd>⌘S</kbd> | Show or hide the sidebar |
 | <kbd>⇧⌘C</kbd> | Copy the current URL |
 | <kbd>⇧⌘N</kbd> | New incognito space |
 | <kbd>⌥⌘N</kbd> | New folder |
 | <kbd>⌘D</kbd> / <kbd>⇧⌘D</kbd> | Pin tab / add tab to favorites |
 | <kbd>⌘1</kbd>–<kbd>⌘9</kbd> | Open favorites 1–9 |
 | <kbd>⌘[</kbd> / <kbd>⌘]</kbd> | Back / forward |
-| <kbd>⌘R</kbd> | Reload |
+| <kbd>⌘R</kbd> / <kbd>⇧⌘R</kbd> | Reload / hard reload (skips the cache) |
 | <kbd>⌥⌘I</kbd> | Inspector |
-| <kbd>⌘S</kbd> / <kbd>⌘P</kbd> | Save page / print |
+| <kbd>⌘P</kbd> | Save the page as a PDF |
 
 ## Development
 

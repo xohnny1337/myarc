@@ -359,16 +359,19 @@ svg {
 
 /* ---- favorites grid --------------------------------------------------- */
 
+/* Arc-style tiles: always at least two per row (even at the narrowest
+   sidebar), more as it gets wider. auto-fill keeps a lone favorite
+   tile-sized instead of stretching across the row. */
 .favorites {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(110px, calc((100% - var(--gap)) / 2)), 1fr));
   gap: var(--gap);
   margin: 12px 0 10px;
 }
 
 .fav {
   position: relative;
-  height: 44px;
+  height: 48px;
   border: 1px solid var(--hairline);
   border-radius: 10px;
   background: var(--tile);
@@ -720,6 +723,49 @@ body.incognito .scroll {
   font-size: 12px;
 }
 
+/* ---- update ready ------------------------------------------------------ */
+
+.update-banner {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin-top: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--tile);
+  color: var(--text-mid);
+  text-align: left;
+}
+
+.update-banner[hidden] {
+  display: none;
+}
+
+.update-banner:hover {
+  background: var(--tile-hover);
+  color: var(--text);
+}
+
+.update-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+#update-text {
+  flex: 1;
+}
+
+.update-action {
+  color: var(--text);
+  font-weight: 600;
+}
+
 /* ---- toast ------------------------------------------------------------- */
 
 .toast {
@@ -938,6 +984,20 @@ body.resizing .resizer::after {
 body.resizing,
 body.resizing * {
   cursor: col-resize !important;
+}
+
+/* ⌘S: no sidebar at all, just the page. */
+body.sidebar-hidden #sidebar,
+body.sidebar-hidden .resizer {
+  display: none;
+}
+
+body.sidebar-hidden #empty {
+  margin-left: var(--gap);
+}
+
+body.sidebar-hidden .devbar {
+  left: var(--gap);
 }
 
 #empty {
