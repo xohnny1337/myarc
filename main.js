@@ -1,4 +1,5 @@
 const path = require('node:path')
+const { pathToFileURL } = require('node:url')
 const { app, ipcMain, Menu, nativeTheme } = require('electron')
 const { Store } = require('./lib/store')
 const { Browser } = require('./lib/browser')
@@ -22,6 +23,27 @@ let blocker = null // ad blocker, once its lists have loaded
 
 const refreshMenu = () => Menu.setApplicationMenu(buildMenu(() => browser, store.space.favorites))
 
+// Links and HTML files macOS hands us (as the default browser, from Slack or
+// Mail, or "Open With"). They can arrive before the app is ready or while no
+// window is open, so they wait here until a window can take them.
+const pendingOpens = []
+
+function openFromOS(url) {
+  if (browser?.win) return browser.openFromOS(url)
+  pendingOpens.push(url)
+  if (app.isReady() && store) createBrowser()
+}
+
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  openFromOS(url)
+})
+
+app.on('open-file', (event, file) => {
+  event.preventDefault()
+  openFromOS(pathToFileURL(file).href)
+})
+
 const createBrowser = () => {
   browser = new Browser(store, histories)
   browser.onFavoritesChange = refreshMenu
@@ -29,6 +51,7 @@ const createBrowser = () => {
   browser.onCheckForUpdates = () => updater?.check()
   browser.setUpdateReady(updateReady)
   if (blocker) browser.setBlocker(blocker)
+  for (const url of pendingOpens.splice(0)) browser.openFromOS(url)
   browser.win.on('closed', () => {
     browser = null
   })

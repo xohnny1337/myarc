@@ -59,7 +59,30 @@
     "linux": {
       "target": "AppImage",
       "artifactName": "MyArc-linux.${ext}"
-    }
+    },
+    "protocols": [
+      {
+        "name": "Web site URL",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "role": "Viewer"
+      }
+    ],
+    "fileAssociations": [
+      {
+        "ext": [
+          "html",
+          "htm",
+          "xhtml",
+          "shtml"
+        ],
+        "name": "HTML document",
+        "role": "Viewer",
+        "rank": "Alternate"
+      }
+    ]
   },
   "dependencies": {
     "@ghostery/adblocker-electron": "^2.20.3",
