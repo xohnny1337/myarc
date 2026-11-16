@@ -57,6 +57,12 @@ const createBrowser = () => {
   })
 }
 
+// Two-finger swipe on a page (tab-preload.js): back or forward in that tab.
+ipcMain.on('tab-swipe', (event, direction) => {
+  browser?.swipeNavigate(event.sender, direction)
+})
+ipcMain.handle('tab-swipe-recent', (event) => browser?.recentSwipe(event.sender) ?? false)
+
 ipcMain.on('action', (event, action) => {
   if (!browser?.win) return
   if (!browser.isUiSender(event.sender)) return
